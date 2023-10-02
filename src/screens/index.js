@@ -1,0 +1,9 @@
+export {default as Home} from './Home/Home';
+export {default as Profile} from './profile/Profile';
+export {default as MakeLate} from './markLate/MarkLate';
+export {default as Settings} from './settings/Settings';
+export {default as TodayLate} from './todayLate/TodayLate';
+export {default as DnoWise} from './dnoWiseList/DnoWise';
+export {default as StudentsProfile} from './studentsProfile/StudentsProfile';
+export {default as DateRange} from './dateRange/DateRange';
+export {default as DateRangeList} from './dateRangeList/DateRangeList';
