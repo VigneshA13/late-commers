@@ -96,13 +96,13 @@ const Profile = ({navigation}) => {
             <TouchableOpacity
               style={styles.button}
               onPress={() => navigation.navigate('DnoWise')}>
-              <Text style={styles.buttonText}>DNO WISE REPORT</Text>
+              <Text style={styles.buttonText}>DNO-WISE REPORT</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.button}
               onPress={() => navigation.navigate('DateRange')}>
-              <Text style={styles.buttonText}>DATE WISE REPORT</Text>
+              <Text style={styles.buttonText}>DATE-WISE REPORT</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.button} onPress={onLogout}>
               <Text style={styles.buttonText}>LOGOUT</Text>

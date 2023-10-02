@@ -94,7 +94,7 @@ const Home = ({navigation}) => {
             <Image source={Images.collegeLogo} style={styles.image} />
             <View>
               <Image source={Images.title} style={styles.image1} />
-              <Text style={styles.txt}>Late - Attendance</Text>
+              <Text style={styles.txt}>Late Comers App</Text>
             </View>
           </View>
         </View>

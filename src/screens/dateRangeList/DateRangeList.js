@@ -114,7 +114,7 @@ const DateRangeList = ({navigation}) => {
                 <TouchableOpacity
                   style={styles.btn}
                   onPress={() => navigation.navigate('DateRange')}>
-                  <Text style={styles.txt1}>GO BACK</Text>
+                  <Text style={styles.txt1}>BACK</Text>
                 </TouchableOpacity>
               </View>
             </View>

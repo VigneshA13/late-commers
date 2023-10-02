@@ -6,6 +6,7 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  FlatList,
 } from 'react-native';
 import Header from '../../components/Header';
 import StaffName from '../../components/StaffName';
@@ -40,6 +41,24 @@ const TodayLate = ({navigation}) => {
       console.log('Error retrieving data: ' + error);
     }
   };
+  const itemsPerRow = 3;
+  const rows = [];
+  const numRows = Math.ceil(data.length / itemsPerRow);
+  for (let i = 0; i < numRows; i++) {
+    const rowItems = data.slice(i * itemsPerRow, (i + 1) * itemsPerRow);
+
+    const rowView = (
+      <View key={i} style={styles.row}>
+        {rowItems.map((item, j) => (
+          <View key={j}>
+            <Text style={styles.dnoDate}>{item.toUpperCase()}</Text>
+          </View>
+        ))}
+      </View>
+    );
+
+    rows.push(rowView);
+  }
 
   function goBack() {
     const myObject = {
@@ -76,27 +95,14 @@ const TodayLate = ({navigation}) => {
               <Text style={styles.countStyle}>{count}</Text>
             </Text>
             <View style={styles.table}>
-              <View style={styles.reportrowhead}>
-                <Text style={styles.cell1}>DNO</Text>
-                <Text style={styles.cell1}>TIME</Text>
+              <View style={styles.scrollView}>
+                <ScrollView nestedScrollEnabled={true} style={{flex: 1}}>
+                  {rows}
+                </ScrollView>
               </View>
-              <ScrollView style={styles.scroll} nestedScrollEnabled={true}>
-                {data && data.length > 0 ? (
-                  data.map((item, i) => {
-                    return (
-                      <View key={i} style={styles.rowreport}>
-                        <Text style={styles.cell}>{item}</Text>
-                        <Text style={styles.cell}>{'Time'}</Text>
-                      </View>
-                    );
-                  })
-                ) : (
-                  <Text style={styles.nomsg}>No records found</Text>
-                )}
-              </ScrollView>
               <View style={styles.row}>
                 <TouchableOpacity style={styles.btn} onPress={goBack}>
-                  <Text style={styles.txt1}>GO BACK</Text>
+                  <Text style={styles.txt1}>BACK</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -154,12 +160,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#172d6b',
   },
+  scrollView: {
+    height: responsiveHeight(50),
+    alignItems: 'center',
+  },
   rowreport: {
     flexDirection: 'row',
     paddingTop: responsiveHeight(1),
     paddingBottom: responsiveHeight(0),
     alignItems: 'center',
     justifyContent: 'center',
+    flex: 1,
   },
   row: {
     flexDirection: 'row',
@@ -201,6 +212,18 @@ const styles = StyleSheet.create({
   },
   countStyle: {
     fontSize: responsiveFontSize(2.3),
+    color: '#172d6b',
+  },
+  dnoDate: {
+    padding: responsiveWidth(2),
+    fontSize: responsiveFontSize(2),
+    fontWeight: 'bold',
+    borderWidth: responsiveWidth(0.5),
+    width: responsiveWidth(27),
+    borderRadius: 8,
+    margin: responsiveWidth(0.5),
+    textAlign: 'center',
+    flex: 1,
     color: '#172d6b',
   },
 });

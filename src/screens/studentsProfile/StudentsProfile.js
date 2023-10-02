@@ -118,26 +118,7 @@ const StudentsProfile = ({navigation}) => {
                   <Text style={styles.cellProfile}>Address</Text>
                   <Text style={styles.cellProfile}>{details.address}</Text>
                 </View>
-                <View style={styles.rowProfile1}>
-                  <Text style={styles.cellProfile}>D.NO</Text>
-                  <Text style={styles.cellProfile}>{dno.toUpperCase()}</Text>
-                </View>
-                <View style={styles.rowProfile}>
-                  <Text style={styles.cellProfile}>NAME</Text>
-                  <Text style={styles.cellProfile}>{details.sname}</Text>
-                </View>
-                <View style={styles.rowProfile}>
-                  <Text style={styles.cellProfile}>Parent Contact No</Text>
-                  <Text style={styles.cellProfile}>{details.mobile1}</Text>
-                </View>
-                <View style={styles.rowProfile}>
-                  <Text style={styles.cellProfile}>Student Contact No</Text>
-                  <Text style={styles.cellProfile}>{details.mobile2}</Text>
-                </View>
-                <View style={styles.rowProfile}>
-                  <Text style={styles.cellProfile}>Address</Text>
-                  <Text style={styles.cellProfile}>{details.address}</Text>
-                </View>
+
                 {permit.regno !== 'no data' && (
                   <>
                     <View style={styles.rowProfile}>

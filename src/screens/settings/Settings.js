@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -6,6 +6,7 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import {
   responsiveHeight,
@@ -13,11 +14,259 @@ import {
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
 
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import {useRoute} from '@react-navigation/native';
+
 import Header from '../../components/Header';
 import StaffName from '../../components/StaffName';
 
-const Settings = () => {
+const Settings = ({navigation}) => {
+  const route = useRoute();
+  const {dno1} = route.params;
+  const dno2 = dno1;
+  console.log('log', dno1);
+  const [dno, setDno] = useState(['']);
+  const [permitdno, setpermitDno] = useState([]);
+  const [leftDno, setleftDno] = useState([]);
+
+  const [data, setData] = useState([]);
+
+  const [storedName, setStoredName] = useState('');
+  const [staffImage, setstaffImage] = useState('');
+  const [staffid, setstaffid] = useState('');
+
+  const [already, setAlready] = useState([]);
+
+  useEffect(() => {
+    retrieveData();
+    fetchData();
+    onPermit();
+    leftData();
+    Already();
+    handleRefresh();
+  }, []);
+  const Already = async () => {
+    for (let i = 0; i < dno1.length; i++) {
+      const response = await axios.get(
+        'https://erp.sjctni.edu/api/latecomer_atten_getabsentees.jsp',
+        {
+          params: {
+            dno: dno1[i],
+          },
+        },
+      );
+      // console.log('dno 30 data', response.data[0].data);
+      const datas = response.data[0].data;
+      const currentTime = new Date();
+
+      if (datas && datas.length > 0) {
+        datas.forEach(item => {
+          const itemDate = new Date(item.dateandtime);
+
+          // Calculate the time difference in milliseconds
+          const timeDifference = currentTime - itemDate;
+
+          // Check if the time difference is less than or equal to 30 minutes (30 * 60 * 1000 milliseconds)
+          if (timeDifference <= 30 * 60 * 1000) {
+            const newItems = [...already]; // Create a new array with the current items
+            newItems.push(dno1[i]); // Add the new item to the end of the new array
+            setAlready(newItems);
+          }
+        });
+      } else {
+        console.log('No records found');
+      }
+    }
+  };
+  const leftData = async () => {
+    try {
+      for (let i = 0; i < dno1.length; i++) {
+        const response = await axios.get(
+          'https://erp.sjctni.edu/api/latecomer_atten_getabsentees.jsp',
+          {params: {dno: dno1[i]}},
+        );
+
+        // console.log(response.data[1].data1.status);
+        if (response.data[1].data1.status !== 'N') {
+          const newItems = [...leftDno]; // Create a new array with the current items
+          newItems.push(dno1[i]); // Add the new item to the end of the new array
+          setleftDno(newItems);
+          // console.log('LEFT', dno1[i]);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const retrieveData = async () => {
+    try {
+      const retrievedName = await AsyncStorage.getItem('staffname');
+      const retrievedImage = await AsyncStorage.getItem('staffImage');
+      const retrivedid = await AsyncStorage.getItem('staffId');
+      if (
+        retrievedName !== null &&
+        retrievedImage !== null &&
+        retrivedid !== null
+      ) {
+        setStoredName(retrievedName);
+        setstaffImage(retrievedImage);
+        setstaffid(retrivedid);
+      }
+    } catch (error) {
+      console.log('Error retrieving data: ' + error);
+    }
+    //get dno from async storage
+    AsyncStorage.getItem('dno')
+      .then(jsonArray => {
+        if (jsonArray) {
+          // Parse the JSON string back to an array
+          const retrievedArray = JSON.parse(jsonArray);
+          setDno(retrievedArray);
+          console.log('Retrieved array:', retrievedArray);
+          console.log('Retrieved dno array:', dno);
+        } else {
+          console.log('Array not found in AsyncStorage.');
+        }
+      })
+      .catch(error => {
+        console.error('Error retrieving array:', error);
+      });
+  };
+  let commadno = dno1.join(',');
+  async function fetchData() {
+    for (let i = 0; i < dno1.length; i++) {
+      const response = await axios.get(
+        'https://erp.sjctni.edu/api/latecomer_atten_absentees_count.jsp',
+        {params: {staffid: '12fcs10', dno: commadno}},
+      );
+
+      setData(response.data);
+      console.log('cnt', response.data);
+    }
+  }
+  console.log('let', data);
+  console.log(typeof data);
+
+  function goBack() {
+    const myObject = {
+      staffImage: staffImage,
+      staffname: storedName,
+    };
+    navigation.navigate('Profile', {
+      serializedObject: JSON.stringify(myObject),
+    });
+  }
+  function goMake() {
+    navigation.navigate('MakeLate');
+  }
+
+  const onAdd = async () => {
+    console.log('already', already);
+    const valuesNotInFirstArray = dno1.filter(
+      value => !permitdno.includes(value),
+    );
+    const valuesNotInLeft = valuesNotInFirstArray.filter(
+      value => !leftDno.includes(value),
+    );
+    const valuesAlreadyAdded = valuesNotInLeft.filter(
+      value => !already.includes(value),
+    );
+    console.log('filter arra', valuesAlreadyAdded);
+    let commadno = valuesAlreadyAdded.join(',');
+    const params = {
+      staffid: staffid,
+      dno: commadno,
+    };
+
+    try {
+      const response = await axios.get(
+        'https://erp.sjctni.edu/api/latecomer_atten_absentees.jsp',
+        {params},
+      );
+      console.log(response.data);
+      if (response.data.data === 'success') {
+        console.log('Valid');
+        Alert.alert('SUCCESS !', 'Late Comers Added Successfully');
+        goBack();
+      } else {
+        Alert.alert('Failed !', 'Unable to add Late Comers.');
+        goBack();
+        console.log('not success');
+      }
+      console.log('');
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const getCurrentTime = () => {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+
+    // Format the time as HH:MM:SS
+    const formattedTime = `${String(hours).padStart(2, '0')}:${String(
+      minutes,
+    ).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    return formattedTime;
+  };
+
+  const onPermit = async () => {
+    try {
+      for (let i = 0; i < dno1.length; i++) {
+        const response = await axios.get(
+          'https://erp.sjctni.edu/api/latecomer_atten_getabsentees.jsp',
+          {params: {dno: dno1[i]}},
+        );
+        // console.log(response.data[1].data2.regno);
+        // console.log(getCurrentTime());
+
+        if (response.data[1].data2.regno !== 'no data') {
+          const currentTime = new Date();
+          // currentTime.setHours(9); // Set the hours to 9 (for 09:00:00)
+          // currentTime.setMinutes(11); // Set the minutes to 11 (for 09:11:00)
+          // currentTime.setSeconds(15); // Set the seconds to 15 (for 09:11:15)
+
+          const timeString = response.data[1].data2.upto;
+          const defaultDate = new Date();
+          const [hours, minutes, seconds] = timeString.split(':').map(Number);
+
+          // Set the time components on the defaultDate
+          defaultDate.setHours(hours);
+          defaultDate.setMinutes(minutes);
+          defaultDate.setSeconds(seconds);
+
+          if (currentTime <= defaultDate) {
+            // console.log('Permission to go');
+            const newItem = dno1[i]; // Replace 'newItem' with the value you want to add
+
+            // Check if the new item is not already in the array
+            if (!permitdno.includes(newItem)) {
+              const newItems = [...permitdno]; // Create a new array with the current items
+              newItems.push(newItem); // Add the new item to the end of the new array
+              setpermitDno(newItems); // Update the state with the new array
+            } // Add the new item to the end of the new array
+          }
+        }
+      }
+      // console.log('permit dno', permitdno);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const filteredDno = permitdno.filter(dno => dno);
+
+  filteredDno.sort();
+  dno1.sort();
+  console.log('permit dno', filteredDno);
+  console.log('dno', dno1);
+
   const getColorStyle = count => {
+    console.log('count', count);
     const countValue = parseInt(count);
     if (countValue >= 5) {
       return styles.redText;
@@ -27,10 +276,30 @@ const Settings = () => {
       return styles.blackText;
     }
   };
+  const handleRefresh = () => {
+    navigation.navigate('Settings', {dno1: dno1});
+  };
+
+  const latePass = regNo => {
+    return filteredDno.indexOf(regNo);
+  };
+
+  const left = regNo => {
+    return leftDno.indexOf(regNo);
+  };
+
+  const Count = regNo => {
+    const exist = data.find(item => item.regno === regNo);
+    if (exist) {
+      return exist.count;
+    }
+    return 0;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Header />
-      <StaffName />
+      <StaffName staffName={storedName} />
 
       <ScrollView style={styles.container}>
         <View style={styles.body}>
@@ -43,44 +312,32 @@ const Settings = () => {
               </View>
 
               <View style={styles.dnobody}>
-                {/* {data.map((dno, index) => (
-               <View key={index} style={styles.row}>
-                  <Text style={styles.cell}>{dno.regno.toUpperCase()}</Text>
-                  <Text style={[styles.cell, getColorStyle(dno.count)]}>
-                    {dno.count}
-                  </Text>
-                </View>
-              ))} */}
-                <View style={styles.row}>
-                  <Text style={styles.cell}>{'22PCA143'}</Text>
-                  <Text style={[styles.cell, getColorStyle(1)]}>
-                    {'2 days'}
-                  </Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.cell}>{'22PCA143'}</Text>
-                  <Text style={[styles.cell, getColorStyle(0)]}>
-                    {'2 days'}
-                  </Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.cell}>{'22PCA143'}</Text>
-                  <Text style={[styles.cell, getColorStyle(17)]}>{2}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.cell}>{'22PCA143'}</Text>
-                  <Text style={[styles.cell, getColorStyle(3)]}>{2}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.cell}>{'22PCA143'}</Text>
-                  <Text style={[styles.cell, getColorStyle(7)]}>{2}</Text>
-                </View>
+                {data.map((dno, index) => (
+                  <View key={index} style={styles.row}>
+                    <Text style={styles.cell}>{dno.regno.toUpperCase()}</Text>
+                    <Text
+                      style={[
+                        styles.cell,
+                        latePass(dno.regno) === -1
+                          ? left(dno.regno) === -1
+                            ? getColorStyle(dno.count)
+                            : styles.redText
+                          : styles.greenText,
+                      ]}>
+                      {latePass(dno.regno) === -1
+                        ? left(dno.regno) === -1
+                          ? dno.count + ' days'
+                          : 'LEFT DNO'
+                        : 'LATE PASS'}
+                    </Text>
+                  </View>
+                ))}
               </View>
               <View style={styles.row1}>
-                <TouchableOpacity style={styles.btn} onPress={'goMake'}>
+                <TouchableOpacity style={styles.btn} onPress={goMake}>
                   <Text style={styles.txt1}>GO BACK</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.btn} onPress={'onAdd'}>
+                <TouchableOpacity style={styles.btn} onPress={onAdd}>
                   <Text style={styles.txt1}>CONFIRM</Text>
                 </TouchableOpacity>
               </View>
@@ -185,6 +442,9 @@ const styles = StyleSheet.create({
   },
   blackText: {
     color: '#172d6b', // Set text color to black
+  },
+  greenText: {
+    color: 'green', // Set text color to black
   },
 });
 

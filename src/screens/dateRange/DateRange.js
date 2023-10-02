@@ -118,6 +118,7 @@ const DateRange = ({navigation}) => {
                   onChangeText={setDno}
                   value={dno}
                   placeholder="ENTER DNO"
+                  placeholderTextColor="gray"
                 />
               </View>
               <View style={styles.row}>

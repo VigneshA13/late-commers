@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -18,8 +18,16 @@ import {
 import Header from '../../components/Header';
 import StaffName from '../../components/StaffName';
 
-const MarkLate = () => {
-  const idPattern = /^[0-9]{2}[A-Za-z]{3}[0-9]{3}$/;
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const MarkLate = ({navigation}) => {
+  useEffect(() => {
+    retrieveData();
+    console.log(dno.dno1);
+  }, [dno]);
+  const [storedName, setStoredName] = useState('');
+  const [staffImage, setstaffImage] = useState('');
   const initialMsgState = {
     dno1: '',
     dno2: '',
@@ -39,27 +47,130 @@ const MarkLate = () => {
   const [msg, setMsg] = useState(initialMsgState);
   const [dno, setDno] = useState(initialDnoState);
 
-  const onInputChange = (fieldName, newValue) => {
-    setDno(exist => ({...exist, [fieldName]: newValue}));
+  let count = 1;
 
-    if (!idPattern.test(newValue)) {
-      setMsg(exist => ({...exist, [fieldName]: 'INVALID DNO'}));
-      count = 1;
-    } else {
-      setMsg(exist => ({...exist, [fieldName]: ''}));
+  const idPattern = /^[0-9]{2}[A-Za-z]{3}[0-9]{3}$/;
+  const dnoArray = Object.values(dno);
+  const filteredDnoArray = dnoArray.filter(value => value !== '');
+  // console.log(filteredDnoArray);
+
+  const onInputChange = async (fieldName, newValue) => {
+    setDno(exist => ({...exist, [fieldName]: newValue}));
+    console.log(newValue);
+    if (newValue.length > 6) {
+      if (!idPattern.test(newValue)) {
+        setMsg(exist => ({...exist, [fieldName]: 'INVALID DNO'}));
+      } else {
+        setMsg(exist => ({...exist, [fieldName]: ''}));
+      }
     }
   };
+  const Unique = () => {
+    const hasDuplicates =
+      new Set(filteredDnoArray).size !== filteredDnoArray.length;
+    console.log(hasDuplicates);
+    if (hasDuplicates) {
+      setMsg(exist => ({...exist, ['dno6']: 'DNO MUST BE UNIQUE.'}));
+    } else {
+      setMsg(exist => ({...exist, ['dno6']: ''}));
+      const areAllValuesEmpty = Object.values(msg).every(value => value === '');
+      if (areAllValuesEmpty) {
+        count = 0;
+      } else {
+        count = 1;
+      }
+    }
+  };
+  const Validate = async () => {
+    try {
+      for (const num in dno) {
+        if (dno[num] !== '') {
+          const response = await axios.get(
+            'https://erp.sjctni.edu/api/latecomer_atten_getabsentees.jsp',
+            {
+              params: {
+                dno: dno[num],
+              },
+            },
+          );
+          console.log(dno[num]);
+          console.log(response.data[1].data1.status);
+          if (response.data[1].data1.status !== 'N') {
+            setMsg(exist => ({...exist, [num]: 'LEFT DNO '}));
+          } else {
+            setMsg(exist => ({...exist, [num]: ''}));
+          }
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  console.log(dno);
+  console.log(msg);
+
+  const retrieveData = async () => {
+    try {
+      const retrievedName = await AsyncStorage.getItem('staffname');
+      const retrievedImage = await AsyncStorage.getItem('staffImage');
+      if (retrievedName !== null && retrievedImage !== null) {
+        setStoredName(retrievedName);
+        setstaffImage(retrievedImage);
+        console.log(retrievedImage);
+      }
+    } catch (error) {
+      console.log('Error retrieving data: ' + error);
+    }
+  };
+
+  function goBack() {
+    const myObject = {
+      staffImage: staffImage,
+      staffname: storedName,
+    };
+    setMsg(initialMsgState);
+    setDno(initialDnoState);
+    navigation.navigate('Profile', {
+      serializedObject: JSON.stringify(myObject),
+    });
+  }
+
+  function onAdd() {
+    Keyboard.dismiss();
+    Unique();
+
+    console.log('count', count);
+    if (count === 0) {
+      setMsg(initialMsgState);
+      navigation.navigate('Settings', {dno1: filteredDnoArray});
+    }
+  }
+
+  function check() {
+    for (const key in msg) {
+      if (Object.hasOwnProperty.call(msg, key) && msg[key] !== '') {
+        return 1;
+      }
+    }
+    return 0;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <Header />
-      <StaffName />
+      <StaffName staffName={storedName} />
 
       <ScrollView style={styles.container}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.inner}>
             <Text style={styles.bbtext}>ENTER DNO OF LATE COMERS</Text>
+
             <View style={styles.table}>
+              {msg.dno6 !== '' && (
+                <Text style={[styles.errmsg, {textAlign: 'center'}]}>
+                  {msg.dno6}
+                </Text>
+              )}
               <View style={styles.rowButton}>
                 <TextInput
                   style={styles.dnoInput0}
@@ -122,11 +233,11 @@ const MarkLate = () => {
               </View>
             </View>
             <View style={styles.row}>
-              <TouchableOpacity style={styles.btn} onPress={'goBack'}>
+              <TouchableOpacity style={styles.btn} onPress={goBack}>
                 <Text style={styles.txt1}>BACK</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.btn} onPress={'onAdd'}>
+              <TouchableOpacity style={styles.btn} onPress={onAdd}>
                 <Text style={styles.txt1}>MARK LATE</Text>
               </TouchableOpacity>
             </View>

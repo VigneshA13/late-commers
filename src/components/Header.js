@@ -44,7 +44,7 @@ const headerStyles = StyleSheet.create({
     right: responsiveWidth(2),
   },
   H_logo: {
-    left: responsiveWidth(2),
+    left: responsiveWidth(3),
   },
   img: {
     width: responsiveHeight(5),
@@ -52,7 +52,7 @@ const headerStyles = StyleSheet.create({
     position: 'relative',
   },
   H_text: {
-    left: responsiveWidth(3),
+    left: responsiveWidth(3.5),
     top: responsiveHeight(0.3),
   },
   head2: {
@@ -64,7 +64,7 @@ const headerStyles = StyleSheet.create({
     fontWeight: '400',
     fontSize: responsiveFontSize(1.7),
     textAlign: 'right',
-    right: responsiveWidth(0.3),
+    right: responsiveWidth(1),
     top: responsiveHeight(1),
   },
 
