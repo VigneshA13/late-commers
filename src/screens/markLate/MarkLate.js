@@ -18,7 +18,6 @@ import {
 import Header from '../../components/Header';
 import StaffName from '../../components/StaffName';
 
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MarkLate = ({navigation}) => {
@@ -81,31 +80,7 @@ const MarkLate = ({navigation}) => {
       }
     }
   };
-  const Validate = async () => {
-    try {
-      for (const num in dno) {
-        if (dno[num] !== '') {
-          const response = await axios.get(
-            'https://erp.sjctni.edu/api/latecomer_atten_getabsentees.jsp',
-            {
-              params: {
-                dno: dno[num],
-              },
-            },
-          );
-          console.log(dno[num]);
-          console.log(response.data[1].data1.status);
-          if (response.data[1].data1.status !== 'N') {
-            setMsg(exist => ({...exist, [num]: 'LEFT DNO '}));
-          } else {
-            setMsg(exist => ({...exist, [num]: ''}));
-          }
-        }
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
+
   console.log(dno);
   console.log(msg);
 
@@ -144,15 +119,6 @@ const MarkLate = ({navigation}) => {
       setMsg(initialMsgState);
       navigation.navigate('Settings', {dno1: filteredDnoArray});
     }
-  }
-
-  function check() {
-    for (const key in msg) {
-      if (Object.hasOwnProperty.call(msg, key) && msg[key] !== '') {
-        return 1;
-      }
-    }
-    return 0;
   }
 
   return (

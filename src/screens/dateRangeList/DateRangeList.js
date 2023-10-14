@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   },
   rowreport: {
     flexDirection: 'row',
-    paddingTop: responsiveHeight(5),
+    paddingTop: responsiveHeight(2),
     paddingBottom: responsiveHeight(0),
     alignItems: 'center',
     justifyContent: 'center',
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   },
   cell: {
     flex: 1,
-    padding: responsiveWidth(2),
+    padding: responsiveWidth(0.5),
     textAlign: 'center',
     fontSize: responsiveFontSize(2.3),
     fontWeight: 'bold',

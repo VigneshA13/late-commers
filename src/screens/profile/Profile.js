@@ -73,9 +73,9 @@ const Profile = ({navigation}) => {
           <Text style={styles.nameBold}>{myObject.staffname}</Text>
         </View>
       </View>
-      <View style={styles.row2}>
-        <View style={styles.buttonContainer}>
-          <ScrollView vertical={true}>
+      <ScrollView style={{flex: 1}}>
+        <View style={styles.row2}>
+          <View style={styles.buttonContainer}>
             {category === 'VP' ||
             category === 'DP' ||
             category === 'PRINCIPLE' ? (
@@ -107,9 +107,9 @@ const Profile = ({navigation}) => {
             <TouchableOpacity style={styles.button} onPress={onLogout}>
               <Text style={styles.buttonText}>LOGOUT</Text>
             </TouchableOpacity>
-          </ScrollView>
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

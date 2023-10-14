@@ -47,39 +47,67 @@ const Settings = ({navigation}) => {
     Already();
     handleRefresh();
   }, []);
+
   const Already = async () => {
-    for (let i = 0; i < dno1.length; i++) {
+    try {
       const response = await axios.get(
-        'https://erp.sjctni.edu/api/latecomer_atten_getabsentees.jsp',
-        {
-          params: {
-            dno: dno1[i],
-          },
-        },
+        'https://erp.sjctni.edu/api/latecomer_atten_getabsentees_today.jsp',
       );
-      // console.log('dno 30 data', response.data[0].data);
-      const datas = response.data[0].data;
-      const currentTime = new Date();
+      // console.log('today', response.data);
+      const msg = response.data.data;
+      let data_elements = msg.split(',');
+      data_elements.shift();
+      console.log('today', data_elements);
+      let alreadyDno = [];
+      for (let i = 0; i < data_elements.length; i++) {
+        const time = data_elements[i].slice(9);
 
-      if (datas && datas.length > 0) {
-        datas.forEach(item => {
-          const itemDate = new Date(item.dateandtime);
+        const date = new Date(time);
+        const dateToCompare = new Date(date.getTime() + 330 * 60 * 1000);
+        // console.log(dateToCompare);
 
-          // Calculate the time difference in milliseconds
-          const timeDifference = currentTime - itemDate;
+        const currentTime = new Date();
+        const IST = new Date(currentTime.getTime() + 330 * 60 * 1000);
+        // console.log(IST);
 
-          // Check if the time difference is less than or equal to 30 minutes (30 * 60 * 1000 milliseconds)
-          if (timeDifference <= 30 * 60 * 1000) {
-            const newItems = [...already]; // Create a new array with the current items
-            newItems.push(dno1[i]); // Add the new item to the end of the new array
-            setAlready(newItems);
-          }
-        });
-      } else {
-        console.log('No records found');
+        const timeDifference = IST - dateToCompare;
+        // console.log(30 * 60 * 1000);
+        if (timeDifference <= 30 * 60 * 1000) {
+          alreadyDno.push(data_elements[i].slice(0, 8));
+          // console.log('current', timeDifference);
+        }
       }
+      // console.log('------------', alreadyDno);
+      setAlready(alreadyDno);
+    } catch (error) {
+      console.log(error);
     }
+
+    // for (let i = 0; i < dno1.length; i++) {
+    //   // console.log('dno 30 data', response.data[0].data);
+    //   const datas = response.data[0].data;
+    //   const currentTime = new Date();
+
+    //   if (datas && datas.length > 0) {
+    //     datas.forEach(item => {
+    //       const itemDate = new Date(item.dateandtime);
+
+    //       // Calculate the time difference in milliseconds
+    //       const timeDifference = currentTime - itemDate;
+
+    //       // Check if the time difference is less than or equal to 30 minutes (30 * 60 * 1000 milliseconds)
+    //       if (timeDifference <= 30 * 60 * 1000) {
+    //         const newItems = [...already]; // Create a new array with the current items
+    //         newItems.push(dno1[i]); // Add the new item to the end of the new array
+    //         setAlready(newItems);
+    //       }
+    //     });
+    //   } else {
+    //     console.log('No records found');
+    //   }
+    // }
   };
+  // console.log('Already', already);
   const leftData = async () => {
     try {
       for (let i = 0; i < dno1.length; i++) {
@@ -125,8 +153,8 @@ const Settings = ({navigation}) => {
           // Parse the JSON string back to an array
           const retrievedArray = JSON.parse(jsonArray);
           setDno(retrievedArray);
-          console.log('Retrieved array:', retrievedArray);
-          console.log('Retrieved dno array:', dno);
+          // console.log('Retrieved array:', retrievedArray);
+          // console.log('Retrieved dno array:', dno);
         } else {
           console.log('Array not found in AsyncStorage.');
         }
@@ -147,8 +175,8 @@ const Settings = ({navigation}) => {
       console.log('cnt', response.data);
     }
   }
-  console.log('let', data);
-  console.log(typeof data);
+  // console.log('let', data);
+  // console.log(typeof data);
 
   function goBack() {
     const myObject = {
@@ -164,7 +192,7 @@ const Settings = ({navigation}) => {
   }
 
   const onAdd = async () => {
-    console.log('already', already);
+    // console.log('already', already);
     const valuesNotInFirstArray = dno1.filter(
       value => !permitdno.includes(value),
     );
@@ -174,8 +202,9 @@ const Settings = ({navigation}) => {
     const valuesAlreadyAdded = valuesNotInLeft.filter(
       value => !already.includes(value),
     );
-    console.log('filter arra', valuesAlreadyAdded);
+    // console.log('filter arra', valuesAlreadyAdded);
     let commadno = valuesAlreadyAdded.join(',');
+    console.log('added : ', commadno);
     const params = {
       staffid: staffid,
       dno: commadno,
@@ -201,19 +230,6 @@ const Settings = ({navigation}) => {
       console.log(err);
     }
   };
-  const getCurrentTime = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const seconds = now.getSeconds();
-
-    // Format the time as HH:MM:SS
-    const formattedTime = `${String(hours).padStart(2, '0')}:${String(
-      minutes,
-    ).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-    return formattedTime;
-  };
 
   const onPermit = async () => {
     try {
@@ -222,8 +238,6 @@ const Settings = ({navigation}) => {
           'https://erp.sjctni.edu/api/latecomer_atten_getabsentees.jsp',
           {params: {dno: dno1[i]}},
         );
-        // console.log(response.data[1].data2.regno);
-        // console.log(getCurrentTime());
 
         if (response.data[1].data2.regno !== 'no data') {
           const currentTime = new Date();
@@ -262,11 +276,11 @@ const Settings = ({navigation}) => {
 
   filteredDno.sort();
   dno1.sort();
-  console.log('permit dno', filteredDno);
-  console.log('dno', dno1);
+  // console.log('permit dno', filteredDno);
+  // console.log('dno', dno1);
 
   const getColorStyle = count => {
-    console.log('count', count);
+    // console.log('count', count);
     const countValue = parseInt(count);
     if (countValue >= 5) {
       return styles.redText;
@@ -286,14 +300,6 @@ const Settings = ({navigation}) => {
 
   const left = regNo => {
     return leftDno.indexOf(regNo);
-  };
-
-  const Count = regNo => {
-    const exist = data.find(item => item.regno === regNo);
-    if (exist) {
-      return exist.count;
-    }
-    return 0;
   };
 
   return (

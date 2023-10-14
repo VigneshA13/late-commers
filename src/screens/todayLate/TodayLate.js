@@ -6,7 +6,6 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  FlatList,
 } from 'react-native';
 import Header from '../../components/Header';
 import StaffName from '../../components/StaffName';
@@ -15,20 +14,38 @@ import {
   responsiveHeight,
   responsiveWidth,
 } from 'react-native-responsive-dimensions';
-
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import timeFormate from '../../components/timeFormate';
 
-const TodayLate = ({navigation}) => {
-  const [storedName, setStoredName] = useState('');
-  const [count, setCount] = useState('');
+const DateRangeList = ({navigation}) => {
   const [data, setData] = useState([]);
+  const [storedName, setStoredName] = useState('');
   const [staffImage, setstaffImage] = useState('');
-
   useEffect(() => {
+    async function getData() {
+      try {
+        const response = await axios.get(
+          'https://erp.sjctni.edu/api/latecomer_atten_getabsentees_today.jsp',
+        );
+        // console.log(response.data.data);
+        const msg = response.data.data;
+        let data_elements = msg.split(',');
+        console.log(data_elements);
+        setData(data_elements);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    getData();
     retrieveData();
-    fetchData();
   }, []);
+  data.sort();
+  console.log('data', data);
+  const myObject = {
+    staffImage: staffImage,
+    staffname: storedName,
+  };
   const retrieveData = async () => {
     try {
       const retrievedName = await AsyncStorage.getItem('staffname');
@@ -36,52 +53,13 @@ const TodayLate = ({navigation}) => {
       if (retrievedName !== null && retrievedImage !== null) {
         setStoredName(retrievedName);
         setstaffImage(retrievedImage);
+        console.log(retrievedImage);
       }
     } catch (error) {
       console.log('Error retrieving data: ' + error);
     }
   };
-  const itemsPerRow = 3;
-  const rows = [];
-  const numRows = Math.ceil(data.length / itemsPerRow);
-  for (let i = 0; i < numRows; i++) {
-    const rowItems = data.slice(i * itemsPerRow, (i + 1) * itemsPerRow);
 
-    const rowView = (
-      <View key={i} style={styles.row}>
-        {rowItems.map((item, j) => (
-          <View key={j}>
-            <Text style={styles.dnoDate}>{item.toUpperCase()}</Text>
-          </View>
-        ))}
-      </View>
-    );
-
-    rows.push(rowView);
-  }
-
-  function goBack() {
-    const myObject = {
-      staffImage: staffImage,
-      staffname: storedName,
-    };
-    navigation.navigate('Profile', {
-      serializedObject: JSON.stringify(myObject),
-    });
-  }
-
-  async function fetchData() {
-    const response = await axios.get(
-      'https://erp.sjctni.edu/api/latecomer_atten_getabsentees_today.jsp',
-    );
-    const originalArray = response.data.data.split(',');
-
-    const newArray = originalArray.filter(item => item !== '');
-    setData(newArray);
-    setCount(newArray.length);
-
-    console.log('check', response.data.data.split(','));
-  }
   return (
     <SafeAreaView style={styles.container}>
       <Header />
@@ -91,17 +69,41 @@ const TodayLate = ({navigation}) => {
         <View style={styles.body}>
           <View style={styles.bbody}>
             <Text style={styles.bbtext}>
-              TODAY LATE COMERS -{''}
-              <Text style={styles.countStyle}>{count}</Text>
+              TOTAL DAYS - {''}
+              <Text style={styles.countStyle}>{data.length - 1}</Text>
             </Text>
             <View style={styles.table}>
-              <View style={styles.scrollView}>
-                <ScrollView nestedScrollEnabled={true} style={{flex: 1}}>
-                  {rows}
-                </ScrollView>
+              <View style={styles.reportrowhead}>
+                <Text style={styles.cell1}>DNO</Text>
+                <Text style={styles.cell1}>TIME</Text>
               </View>
+              <ScrollView style={styles.scroll} nestedScrollEnabled={true}>
+                {data && data.length > 0 ? (
+                  data.map(
+                    item =>
+                      item && (
+                        <View key={item} style={styles.rowreport}>
+                          <Text style={styles.cell}>
+                            {item.slice(0, 8).toUpperCase()}
+                          </Text>
+                          <Text style={styles.cell}>
+                            {timeFormate(item.slice(20))}
+                          </Text>
+                        </View>
+                      ),
+                  )
+                ) : (
+                  <Text style={styles.nomsg}>No records found</Text>
+                )}
+              </ScrollView>
               <View style={styles.row}>
-                <TouchableOpacity style={styles.btn} onPress={goBack}>
+                <TouchableOpacity
+                  style={styles.btn}
+                  onPress={() => {
+                    navigation.navigate('Profile', {
+                      serializedObject: JSON.stringify(myObject),
+                    });
+                  }}>
                   <Text style={styles.txt1}>BACK</Text>
                 </TouchableOpacity>
               </View>
@@ -160,28 +162,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#172d6b',
   },
-  scrollView: {
-    height: responsiveHeight(50),
-    alignItems: 'center',
-  },
   rowreport: {
     flexDirection: 'row',
-    paddingTop: responsiveHeight(1),
+    paddingTop: responsiveHeight(2),
     paddingBottom: responsiveHeight(0),
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
   },
   row: {
     flexDirection: 'row',
-    paddingTop: responsiveHeight(1),
-    paddingBottom: responsiveHeight(0),
+    paddingTop: responsiveHeight(2),
+    paddingBottom: responsiveHeight(1),
     alignItems: 'center',
     justifyContent: 'center',
   },
   cell: {
     flex: 1,
-    padding: responsiveWidth(2),
+    padding: responsiveWidth(0.5),
     textAlign: 'center',
     fontSize: responsiveFontSize(2.3),
     fontWeight: 'bold',
@@ -212,20 +209,8 @@ const styles = StyleSheet.create({
   },
   countStyle: {
     fontSize: responsiveFontSize(2.3),
-    color: '#172d6b',
-  },
-  dnoDate: {
-    padding: responsiveWidth(2),
-    fontSize: responsiveFontSize(2),
-    fontWeight: 'bold',
-    borderWidth: responsiveWidth(0.5),
-    width: responsiveWidth(27),
-    borderRadius: 8,
-    margin: responsiveWidth(0.5),
-    textAlign: 'center',
-    flex: 1,
-    color: '#172d6b',
+    color: 'red',
   },
 });
 
-export default TodayLate;
+export default DateRangeList;

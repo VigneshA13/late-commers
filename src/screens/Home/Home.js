@@ -8,6 +8,9 @@ import {
   Alert,
   StyleSheet,
   SafeAreaView,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -87,45 +90,50 @@ const Home = ({navigation}) => {
   };
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <View style={styles.container}>
-        <View style={styles.top}>
-          <View style={styles.main}>
-            <Image source={Images.collegeLogo} style={styles.image} />
-            <View>
-              <Image source={Images.title} style={styles.image1} />
-              <Text style={styles.txt}>Late Comers App</Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.bottom}>
-          <View style={styles.form}>
-            <Text style={styles.txt2}>Login Page</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="FACULTY ID"
-                placeholderTextColor="gray"
-                onChangeText={setUserName}
-              />
+    <KeyboardAvoidingView behavior={'padding'} style={{flex: 1}}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <SafeAreaView style={{flex: 1}}>
+          <View style={styles.container}>
+            <View style={styles.top}>
+              <View style={styles.main}>
+                <Image source={Images.collegeLogo} style={styles.image} />
+                <View>
+                  <Image source={Images.title} style={styles.image1} />
+                  <Text style={styles.txt}>Late Comers App</Text>
+                </View>
+              </View>
             </View>
 
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="PASSWORD"
-                placeholderTextColor="gray"
-                secureTextEntry={true}
-                onChangeText={setPassword}
-              />
+            <View style={styles.bottom}>
+              <View style={styles.form}>
+                <Text style={styles.txt2}>Login Page</Text>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="FACULTY ID"
+                    placeholderTextColor="gray"
+                    onChangeText={setUserName}
+                  />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="PASSWORD"
+                    placeholderTextColor="gray"
+                    secureTextEntry={true}
+                    onChangeText={setPassword}
+                  />
+                </View>
+                <TouchableOpacity style={styles.btn} onPress={onSubmit}>
+                  <Text style={styles.txt1}>Login</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <TouchableOpacity style={styles.btn} onPress={onSubmit}>
-              <Text style={styles.txt1}>Login</Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      </View>
-    </SafeAreaView>
+        </SafeAreaView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
